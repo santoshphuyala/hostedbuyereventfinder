@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosted Buyer Event Finder</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            padding-bottom: 60px;
+        }
+
+        .connection-status {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            animation: slideDown 0.3s ease;
+        }
+
+        .connection-status.online {
+            background: #198754;
+        }
+
+        .connection-status.d-none {
+            display: none !important;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .regional-tabs {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .regional-tabs .nav-link {
+            color: #495057;
+            border-radius: 8px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .regional-tabs .nav-link:hover {
+            background: #e9ecef;
+        }
+
+        .regional-tabs .nav-link.active {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-section {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 2px solid transparent;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            border-color: var(--primary-color);
+        }
+
+        .event-card-header {
+            background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+            color: white;
+            padding: 15px;
+            position: relative;
+        }
+
+        .priority-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffc107;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .event-card-body {
+            padding: 15px;
+        }
+
+        .benefit-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+
+        .benefit-hotel {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .benefit-airfare {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .event-date {
+            background: #fff3cd;
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .event-date.urgent {
+            background: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .event-actions button {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        .event-links {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .event-links a {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 15px;
+            margin-bottom: 10px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        #refreshIcon.rotating {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .my-event-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .my-event-item.status-applied {
+            border-left-color: var(--warning-color);
+        }
+
+        .my-event-item.status-confirmed {
+            border-left-color: var(--success-color);
+        }
+
+        .my-event-item.status-completed {
+            border-left-color: var(--secondary-color);
+        }
+
+        .my-event-item.status-rejected {
+            border-left-color: var(--danger-color);
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .insight-card h5 {
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .insight-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .recommendation-card {
+            background: white;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .regional-tabs .nav-link {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            
+            .event-card {
+                margin-bottom: 15px;
+            }
+            
+            .event-actions {
+                flex-direction: column;
+            }
+            
+            .event-actions button {
+                width: 100%;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Status Bar -->
+    <div id="connectionStatus" class="connection-status d-none">
+        <i class="bi bi-wifi-off"></i> <span id="connectionText">Offline - Showing cached events only</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-globe2"></i> HB Event Finder
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-tab="discover">
+                            <i class="bi bi-search"></i> Discover
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="my-events">
+                            <i class="bi bi-bookmark-star"></i> My Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="ai-insights">
+                            <i class="bi bi-lightbulb"></i> AI Insights
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="settings">
+                            <i class="bi bi-gear"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-0">
+        
+        <!-- Discover Tab -->
+        <div id="discover-tab" class="tab-content active">
+            <div class="search-section p-3 bg-light">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <h2 class="mb-2">
+                            <i class="bi bi-binoculars"></i> Discover Events
+                        </h2>
+                        <button class="btn btn-success" id="refreshOnlineBtn">
+                            <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> 
+                            <span id="refreshText">Load Events</span>
+                        </button>
+                    </div>
+
+                    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap" role="alert">
+                        <span>
+                            <i class="bi bi-info-circle"></i> 
+                            Last updated: <strong id="lastUpdated">Never</strong>
+                        </span>
+                        <span class="badge bg-primary" id="onlineEventCount">0 events found</span>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" 
+                                    placeholder="Search by event name, country, city, industry...">
+                                <button class="btn btn-primary" id="searchBtn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-pills mb-3 regional-tabs" id="regionalTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-region="all">
+                                <i class="bi bi-globe"></i> All
+                                <span class="badge bg-light text-dark ms-1" id="count-all">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="india">
+                                <i class="bi bi-flag"></i> India
+                                <span class="badge bg-light text-dark ms-1" id="count-india">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="china">
+                                <i class="bi bi-flag"></i> China
+                                <span class="badge bg-light text-dark ms-1" id="count-china">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="south-asia">
+                                <i class="bi bi-flag"></i> South Asia
+                                <span class="badge bg-light text-dark ms-1" id="count-south-asia">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="rest-world">
+                                <i class="bi bi-globe-americas"></i> Rest
+                                <span class="badge bg-light text-dark ms-1" id="count-rest-world">0</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="row g-2">
+                        <div class="col-md-3 col-6">
+                            <select id="benefitFilter" class="form-select">
+                                <option value="">All Benefits</option>
+                                <option value="both">Hotel + Airfare ⭐</option>
+                                <option value="hotel">Hotel Only</option>
+                                <option value="airfare">Airfare Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="dateFilter" class="form-select">
+                                <option value="all">All Future Events</option>
+                                <option value="1month">Next 1 Month</option>
+                                <option value="3months">Next 3 Months</option>
+                                <option value="6months">Next 6 Months</option>
+                                <option value="1year">Next 1 Year</option>
+                                <option value="2years">Next 2 Years</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="industryFilter" class="form-select">
+                                <option value="">All Industries</option>
+                                <option value="Tourism">Tourism</option>
+                                <option value="MICE">MICE</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Trade">Trade</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="sortFilter" class="form-select">
+                                <option value="date-asc">Date (Nearest First)</option>
+                                <option value="date-desc">Date (Latest First)</option>
+                                <option value="priority">Priority (Premium First)</option>
+                                <option value="deadline">Deadline (Urgent First)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-warning quick-filter" data-filter="premium">
+                            <i class="bi bi-star-fill"></i> Premium Events
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger quick-filter" data-filter="urgent">
+                            <i class="bi bi-exclamation-circle"></i> Urgent Deadlines
+                        </button>
+                        <button class="btn btn-sm btn-outline-success quick-filter" data-filter="upcoming">
+                            <i class="bi bi-calendar-event"></i> Next 3 Months
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="clearFilters">
+                            <i class="bi bi-x-circle"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <h5>
+                        <span id="eventCount">0</span> Upcoming Events
+                        <small class="text-muted" id="regionLabel"></small>
+                    </h5>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                        <i class="bi bi-plus-circle"></i> Add Event
+                    </button>
+                </div>
+
+                <div id="loadingIndicator" class="text-center py-5 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading events...</p>
+                </div>
+
+                <div id="eventsGrid" class="row g-3"></div>
+            </div>
+        </div>
+
+        <!-- My Events Tab -->
+        <div id="my-events-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-bookmark-star-fill"></i> My Interested Events
+                </h2>
+
+                <div class="row mb-4">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-info text-white">
+                            <div class="card-body">
+                                <h3 id="interestedCount">0</h3>
+                                <p class="mb-0">Interested</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-warning text-white">
+                            <div class="card-body">
+                                <h3 id="appliedCount">0</h3>
+                                <p class="mb-0">Applied</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-success text-white">
+                            <div class="card-body">
+                                <h3 id="confirmedCount">0</h3>
+                                <p class="mb-0">Confirmed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-secondary text-white">
+                            <div class="card-body">
+                                <h3 id="completedCount">0</h3>
+                                <p class="mb-0">Completed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="interested">Interested</option>
+                        <option value="applied">Applied</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div id="myEventsList"></div>
+            </div>
+        </div>
+
+        <!-- AI Insights Tab -->
+        <div id="ai-insights-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-lightbulb-fill"></i> AI-Powered Insights
+                </h2>
+
+                <div class="row g-3" id="insightsContainer"></div>
+
+                <div class="mt-4">
+                    <h4><i class="bi bi-stars"></i> Personalized Recommendations</h4>
+                    <div id="recommendationsContainer" class="row g-3 mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-gear-fill"></i> Settings & Data Management
+                </h2>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-arrow-down-up"></i> Import/Export Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <h6>Import Data</h6>
+                                <div class="mb-2">
+                                    <label class="form-label">Import from JSON</label>
+                                    <input type="file" class="form-control" id="importJSON" accept=".json">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Export Data</h6>
+                                <button class="btn btn-success mb-2 w-100" id="exportJSON">
+                                    <i class="bi bi-download"></i> Export as JSON
+                                </button>
+                                <small class="text-muted d-block mt-2">
+                                    Exports include timestamp and all event data
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-database"></i> Database Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Total Events: <strong id="totalEvents">0</strong></label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Upcoming Events: <strong id="upcomingEvents">0</strong></label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Past Events: <strong id="pastEvents">0</strong></label>
+                        </div>
+                        <button class="btn btn-danger me-2 mb-2" id="clearPastEvents">
+                            <i class="bi bi-calendar-x"></i> Clear Past Events
+                        </button>
+                        <button class="btn btn-warning me-2 mb-2" id="clearDatabase">
+                            <i class="bi bi-trash"></i> Clear All Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-info-circle"></i> About</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Hosted Buyer Event Finder</strong></p>
+                        <p>Version 2.0.0</p>
+                        <p class="mb-1">Designed & Developed by:</p>
+                        <p class="mb-0"><strong>Santosh Phuyal</strong></p>
+                        <p class="mb-3">
+                            <i class="bi bi-envelope"></i> 
+                            <a href="mailto:hisantoshphuyal@gmail.com">hisantoshphuyal@gmail.com</a>
+                        </p>
+                        <p class="text-muted small">
+                            This app helps business professionals discover and track hosted buyer events worldwide.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add Event Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> <span id="modalTitle">Add New Event</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <input type="hidden" id="eventId">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Event Name *</label>
+                                <input type="text" class="form-control" id="eventName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country *</label>
+                                <input type="text" class="form-control" id="eventCountry" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" id="eventCity" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Event Date *</label>
+                                <input type="date" class="form-control" id="eventDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Application Deadline</label>
+                                <input type="date" class="form-control" id="eventDeadline">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Industry</label>
+                                <input type="text" class="form-control" id="eventIndustry">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Benefits *</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="benefitHotel">
+                                    <label class="form-check-label" for="benefitHotel">
+                                        Complimentary Hotel
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="benefitAirfare">
+                                    <label class="form-check-label" for="benefitAirfare">
+                                        Complimentary Airfare
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Organizer</label>
+                                <input type="text" class="form-control" id="eventOrganizer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Website</label>
+                                <input type="url" class="form-control" id="eventWebsite" placeholder="https://">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Registration Link</label>
+                                <input type="url" class="form-control" id="eventRegistrationUrl" placeholder="https://">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="eventEmail">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Documents Required</label>
+                                <textarea class="form-control" id="eventDocuments" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveEventBtn">
+                        <i class="bi bi-save"></i> Save Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="eventDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailEventName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="eventDetailsContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" id="editEventBtn">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteEventBtn">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">© 2024 Hosted Buyer Event Finder | Designed by <strong>Santosh Phuyal</strong></p>
+        <p class="mb-0 small">
+            <a href="mailto:hisantoshphuyal@gmail.com" class="text-white">hisantoshphuyal@gmail.com</a>
+        </p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Complete Application Code - Embedded
+        class HostedBuyerApp {
+            constructor() {
+                this.events = [];
+                this.myEvents = [];
+                this.currentEventId = null;
+                this.currentRegion = 'all';
+                this.filters = {
+                    search: '',
+                    benefit: '',
+                    date: 'all',
+                    industry: '',
+                    sort: 'date-asc',
+                    status: ''
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.loadFromStorage();
+                this.setupEventListeners();
+                this.renderEvents();
+                this.updateStats();
+                this.updateRegionCounts();
+                
+                // Auto-load sample data if empty
+                if (this.events.length === 0) {
+                    setTimeout(() => this.loadSampleEvents(), 500);
+                }
+            }
+
+            loadFromStorage() {
+                const storedEvents = localStorage.getItem('hostedBuyerEvents');
+                const storedMyEvents = localStorage.getItem('myEvents');
+                const lastUpdated = localStorage.getItem('lastUpdated');
+                
+                if (storedEvents) {
+                    this.events = JSON.parse(storedEvents);
+                }
+                
+                if (storedMyEvents) {
+                    this.myEvents = JSON.parse(storedMyEvents);
+                }
+
+                if (lastUpdated) {
+                    document.getElementById('lastUpdated').textContent = this.formatDateTime(lastUpdated);
+                }
+            }
+
+            saveToStorage() {
+                localStorage.setItem('hostedBuyerEvents', JSON.stringify(this.events));
+                localStorage.setItem('myEvents', JSON.stringify(this.myEvents));
+                localStorage.setItem('lastUpdated', new Date().toISOString());
+                document.getElementById('lastUpdated').textContent = this.formatDateTime(new Date().toISOString());
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchTab(link.dataset.tab);
+                        
+                        document.querySelectorAll('.nav-link[data-tab]').forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    });
+                });
+
+                // Regional tabs
+                document.querySelectorAll('.regional-tabs .nav-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.currentRegion = link.dataset.region;
+                        
+                        document.querySelectorAll('.regional-tabs .nav-link').forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                        
+                        this.renderEvents();
+                    });
+                });
+
+                // Refresh
+                document.getElementById('refreshOnlineBtn').addEventListener('click', () => this.loadSampleEvents());
+
+                // Search and Filters
+                document.getElementById('searchBtn').addEventListener('click', () => this.applyFilters());
+                document.getElementById('searchInput').addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') this.applyFilters();
+                });
+                
+                document.getElementById('benefitFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('dateFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('industryFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('sortFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('statusFilter').addEventListener('change', () => this.renderMyEvents());
+
+                // Quick Filters
+                document.querySelectorAll('.quick-filter').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const filter = e.currentTarget.dataset.filter;
+                        this.applyQuickFilter(filter);
+                    });
+                });
+
+                document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
+
+                // Add/Edit Event
+                document.getElementById('saveEventBtn').addEventListener('click', () => this.saveEvent());
+
+                // Export
+                document.getElementById('exportJSON').addEventListener('click', () => this.exportJSON());
+
+                // Import
+                document.getElementById('importJSON').addEventListener('change', (e) => this.importJSON(e));
+
+                // Database Management
+                document.getElementById('clearPastEvents').addEventListener('click', () => this.clearPastEventsUI());
+                document.getElementById('clearDatabase').addEventListener('click', () => this.clearDatabase());
+
+                // Modal reset
+                const modal = document.getElementById('addEventModal');
+                if (modal) {
+                    modal.addEventListener('hidden.bs.modal', () => this.resetEventForm());
+                }
+            }
+
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                const targetTab = document.getElementById(`${tabName}-tab`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                    
+                    if (tabName === 'my-events') {
+                        this.renderMyEvents();
+                        this.updateStats();
+                    } else if (tabName === 'ai-insights') {
+                        this.generateInsights();
+                    } else if (tabName === 'settings') {
+                        this.updateSettingsUI();
+                    }
+                }
+            }
+
+            updateSettingsUI() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const totalEvents = this.events.length;
+                const upcomingEvents = this.events.filter(e => new Date(e.date) >= today).length;
+                const pastEvents = totalEvents - upcomingEvents;
+
+                document.getElementById('totalEvents').textContent = totalEvents;
+                document.getElementById('upcomingEvents').textContent = upcomingEvents;
+                document.getElementById('pastEvents').textContent = pastEvents;
+            }
+
+            updateRegionCounts() {
+                const counts = {
+                    all: 0,
+                    india: 0,
+                    china: 0,
+                    'south-asia': 0,
+                    'rest-world': 0
+                };
+
+                const southAsiaCountries = ['Nepal', 'Bangladesh', 'Sri Lanka', 'Pakistan', 'Bhutan', 'Maldives'];
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                this.events.forEach(event => {
+                    if (new Date(event.date) < today) return;
+
+                    counts.all++;
+
+                    if (event.country === 'India') {
+                        counts.india++;
+                    } else if (event.country === 'China') {
+                        counts.china++;
+                    } else if (southAsiaCountries.includes(event.country)) {
+                        counts['south-asia']++;
+                    } else {
+                        counts['rest-world']++;
+                    }
+                });
+
+                Object.keys(counts).forEach(region => {
+                    const badge = document.getElementById(`count-${region}`);
+                    if (badge) {
+                        badge.textContent = counts[region];
+                    }
+                });
+            }
+
+            applyFilters() {
+                this.filters.search = document.getElementById('searchInput').value.toLowerCase();
+                this.filters.benefit = document.getElementById('benefitFilter').value;
+                this.filters.date = document.getElementById('dateFilter').value;
+                this.filters.industry = document.getElementById('industryFilter').value;
+                this.filters.sort = document.getElementById('sortFilter').value;
+                
+                this.renderEvents();
+            }
+
+            applyQuickFilter(filterType) {
+                switch(filterType) {
+                    case 'premium':
+                        document.getElementById('benefitFilter').value = 'both';
+                        break;
+                    case 'urgent':
+                        document.getElementById('sortFilter').value = 'deadline';
+                        break;
+                    case 'upcoming':
+                        document.getElementById('dateFilter').value = '3months';
+                        break;
+                }
+                this.applyFilters();
+            }
+
+            clearFilters() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('benefitFilter').value = '';
+                document.getElementById('dateFilter').value = 'all';
+                document.getElementById('industryFilter').value = '';
+                document.getElementById('sortFilter').value = 'date-asc';
+                
+                this.filters = {
+                    search: '',
+                    benefit: '',
+                    date: 'all',
+                    industry: '',
+                    sort: 'date-asc'
+                };
+                
+                this.renderEvents();
+            }
+
+            getFilteredEvents() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let filtered = this.events.filter(event => {
+                    const eventDate = new Date(event.date);
+                    if (eventDate < today) return false;
+                    return true;
+                });
+
+                // Region filter
+                if (this.currentRegion !== 'all') {
+                    const southAsiaCountries = ['Nepal', 'Bangladesh', 'Sri Lanka', 'Pakistan', 'Bhutan', 'Maldives'];
+                    
+                    filtered = filtered.filter(event => {
+                        if (this.currentRegion === 'india') {
+                            return event.country === 'India';
+                        } else if (this.currentRegion === 'china') {
+                            return event.country === 'China';
+                        } else if (this.currentRegion === 'south-asia') {
+                            return southAsiaCountries.includes(event.country);
+                        } else if (this.currentRegion === 'rest-world') {
+                            return event.country !== 'India' && 
+                                   event.country !== 'China' && 
+                                   !southAsiaCountries.includes(event.country);
+                        }
+                        return true;
+                    });
+                }
+
+                // Search filter
+                if (this.filters.search) {
+                    filtered = filtered.filter(event => 
+                        event.name.toLowerCase().includes(this.filters.search) ||
+                        event.country.toLowerCase().includes(this.filters.search) ||
+                        event.city.toLowerCase().includes(this.filters.search) ||
+                        (event.industry && event.industry.toLowerCase().includes(this.filters.search)) ||
+                        (event.organizer && event.organizer.toLowerCase().includes(this.filters.search))
+                    );
+                }
+
+                // Benefit filter
+                if (this.filters.benefit) {
+                    if (this.filters.benefit === 'both') {
+                        filtered = filtered.filter(event => event.benefits.hotel && event.benefits.airfare);
+                    } else if (this.filters.benefit === 'hotel') {
+                        filtered = filtered.filter(event => event.benefits.hotel);
+                    } else if (this.filters.benefit === 'airfare') {
+                        filtered = filtered.filter(event => event.benefits.airfare);
+                    }
+                }
+
+                // Industry filter
+                if (this.filters.industry) {
+                    filtered = filtered.filter(event => event.industry === this.filters.industry);
+                }
+
+                // Date filter
+                if (this.filters.date !== 'all') {
+                    const ranges = {
+                        '1month': 1,
+                        '3months': 3,
+                        '6months': 6,
+                        '1year': 12,
+                        '2years': 24
+                    };
+                    
+                    const months = ranges[this.filters.date];
+                    const futureDate = new Date();
+                    futureDate.setMonth(futureDate.getMonth() + months);
+                    
+                    filtered = filtered.filter(event => {
+                        const eventDate = new Date(event.date);
+                        return eventDate <= futureDate;
+                    });
+                }
+
+                // Sort
+                filtered.sort((a, b) => {
+                    switch(this.filters.sort) {
+                        case 'date-asc':
+                            return new Date(a.date) - new Date(b.date);
+                        case 'date-desc':
+                            return new Date(b.date) - new Date(a.date);
+                        case 'priority':
+                            const aPriority = (a.benefits.hotel && a.benefits.airfare) ? 1 : 0;
+                            const bPriority = (b.benefits.hotel && b.benefits.airfare) ? 1 : 0;
+                            return bPriority - aPriority;
+                        case 'deadline':
+                            if (!a.deadline && !b.deadline) return 0;
+                            if (!a.deadline) return 1;
+                            if (!b.deadline) return -1;
+                            return new Date(a.deadline) - new Date(b.deadline);
+                        default:
+                            return 0;
+                    }
+                });
+
+                return filtered;
+            }
+
+            renderEvents() {
+                const filtered = this.getFilteredEvents();
+                const container = document.getElementById('eventsGrid');
+                document.getElementById('eventCount').textContent = filtered.length;
+                
+                const regionLabels = {
+                    'all': '',
+                    'india': '(India)',
+                    'china': '(China)',
+                    'south-asia': '(South Asia)',
+                    'rest-world': '(Rest of World)'
+                };
+                document.getElementById('regionLabel').textContent = regionLabels[this.currentRegion];
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h4>No Upcoming Events Found</h4>
+                                <p>Try adjusting your filters or load sample events</p>
+                                <button class="btn btn-primary mt-3" onclick="app.loadSampleEvents()">
+                                    <i class="bi bi-arrow-clockwise"></i> Load Sample Events
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(event => this.createEventCard(event)).join('');
+
+                // Add event listeners
+                document.querySelectorAll('.view-details-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const eventId = btn.dataset.eventId;
+                        this.showEventDetails(eventId);
+                    });
+                });
+
+                document.querySelectorAll('.mark-interested-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const eventId = btn.dataset.eventId;
+                        this.markInterested(eventId);
+                    });
+                });
+            }
+
+            createEventCard(event) {
+                const isPremium = event.benefits.hotel && event.benefits.airfare;
+                const isInterested = this.myEvents.some(e => e.id === event.id);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const eventDate = new Date(event.date);
+                const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                
+                let deadlineClass = '';
+                let deadlineText = '';
+                if (event.deadline) {
+                    const deadlineDate = new Date(event.deadline);
+                    const daysToDeadline = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+                    if (daysToDeadline <= 7 && daysToDeadline > 0) {
+                        deadlineClass = 'urgent';
+                        deadlineText = `⚠️ Only ${daysToDeadline} days to apply!`;
+                    }
+                }
+                
+                return `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="event-card">
+                            <div class="event-card-header">
+                                ${isPremium ? '<div class="priority-badge"><i class="bi bi-star-fill"></i> Premium</div>' : ''}
+                                <h5 class="mb-1">${event.name}</h5>
+                                <p class="mb-0"><i class="bi bi-geo-alt-fill"></i> ${event.city}, ${event.country}</p>
+                            </div>
+                            <div class="event-card-body">
+                                <div class="mb-2">
+                                    ${event.benefits.hotel ? '<span class="benefit-badge benefit-hotel"><i class="bi bi-building"></i> Hotel</span>' : ''}
+                                    ${event.benefits.airfare ? '<span class="benefit-badge benefit-airfare"><i class="bi bi-airplane"></i> Airfare</span>' : ''}
+                                </div>
+                                
+                                ${event.industry ? `<p class="mb-1"><strong>Industry:</strong> ${event.industry}</p>` : ''}
+                                ${event.organizer ? `<p class="mb-1"><small><i class="bi bi-building"></i> ${event.organizer}</small></p>` : ''}
+                                
+                                <div class="event-date ${deadlineClass}">
+                                    <i class="bi bi-calendar-event"></i> ${this.formatDate(event.date)}
+                                    <br>
+                                    <small>${daysUntil > 0 ? `${daysUntil} days away` : 'Today'}</small>
+                                </div>
+                                
+                                ${event.deadline ? `
+                                    <p class="mb-1 mt-2 ${deadlineClass ? 'text-danger fw-bold' : 'text-warning'}">
+                                        <i class="bi bi-clock"></i> <strong>Deadline:</strong> ${this.formatDate(event.deadline)}
+                                        ${deadlineText ? `<br><small>${deadlineText}</small>` : ''}
+                                    </p>
+                                ` : ''}
+
+                                ${event.registrationUrl || event.website ? `
+                                    <div class="event-links">
+                                        ${event.registrationUrl ? `<a href="${event.registrationUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square"></i> Register</a>` : ''}
+                                        ${event.website ? `<a href="${event.website}" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-link-45deg"></i> Website</a>` : ''}
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="event-actions">
+                                    <button class="btn btn-sm btn-primary view-details-btn" data-event-id="${event.id}">
+                                        <i class="bi bi-eye"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm ${isInterested ? 'btn-success' : 'btn-outline-warning'} mark-interested-btn" 
+                                            data-event-id="${event.id}">
+                                        <i class="bi ${isInterested ? 'bi-check-circle-fill' : 'bi-star'}"></i> 
+                                        ${isInterested ? 'Interested' : 'Mark'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showEventDetails(eventId) {
+                const event = this.events.find(e => e.id === eventId);
+                if (!event) return;
+
+                this.currentEventId = eventId;
+                document.getElementById('detailEventName').textContent = event.name;
+                
+                const myEvent = this.myEvents.find(e => e.id === eventId);
+                const status = myEvent ? myEvent.status : 'Not interested';
+                
+                document.getElementById('eventDetailsContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-geo-alt-fill"></i> Location</h6>
+                            <p>${event.city}, ${event.country}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-calendar-event"></i> Event Date</h6>
+                            <p>${this.formatDate(event.date)}</p>
+                        </div>
+                        ${event.deadline ? `
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-clock"></i> Application Deadline</h6>
+                                <p>${this.formatDate(event.deadline)}</p>
+                            </div>
+                        ` : ''}
+                        ${event.industry ? `
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-briefcase"></i> Industry</h6>
+                                <p>${event.industry}</p>
+                            </div>
+                        ` : ''}
+                        ${event.organizer ? `
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-building"></i> Organizer</h6>
+                                <p>${event.organizer}</p>
+                            </div>
+                        ` : ''}
+                        <div class="col-12">
+                            <h6><i class="bi bi-gift"></i> Benefits</h6>
+                            <p>
+                                ${event.benefits.hotel ? '<span class="badge bg-info me-1"><i class="bi bi-building"></i> Complimentary Hotel</span>' : ''}
+                                ${event.benefits.airfare ? '<span class="badge bg-success"><i class="bi bi-airplane"></i> Complimentary Airfare</span>' : ''}
+                            </p>
+                        </div>
+                        ${event.description ? `
+                            <div class="col-12">
+                                <h6><i class="bi bi-info-circle"></i> Description</h6>
+                                <p>${event.description}</p>
+                            </div>
+                        ` : ''}
+                        ${event.documents ? `
+                            <div class="col-12">
+                                <h6><i class="bi bi-file-text"></i> Required Documents</h6>
+                                <ul>
+                                    ${event.documents.split(',').map(doc => `<li>${doc.trim()}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        ${event.registrationUrl || event.website ? `
+                            <div class="col-12">
+                                <h6><i class="bi bi-link-45deg"></i> Links</h6>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    ${event.registrationUrl ? `<a href="${event.registrationUrl}" target="_blank" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i> Registration</a>` : ''}
+                                    ${event.website ? `<a href="${event.website}" target="_blank" class="btn btn-sm btn-info"><i class="bi bi-globe"></i> Event Website</a>` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${event.email ? `
+                            <div class="col-md-6 mt-3">
+                                <h6><i class="bi bi-envelope"></i> Contact Email</h6>
+                                <p><a href="mailto:${event.email}">${event.email}</a></p>
+                            </div>
+                        ` : ''}
+                        <div class="col-12 mt-3">
+                            <h6><i class="bi bi-flag"></i> Status</h6>
+                            <p><span class="badge bg-${this.getStatusColor(status)}">${status}</span></p>
+                        </div>
+                    </div>
+                `;
+
+                const modal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
+                modal.show();
+
+                document.getElementById('editEventBtn').onclick = () => {
+                    modal.hide();
+                    this.editEvent(eventId);
+                };
+
+                document.getElementById('deleteEventBtn').onclick = () => {
+                    if (confirm('Are you sure you want to delete this event?')) {
+                        this.deleteEvent(eventId);
+                        modal.hide();
+                    }
+                };
+            }
+
+            markInterested(eventId) {
+                const event = this.events.find(e => e.id === eventId);
+                if (!event) return;
+
+                const existingIndex = this.myEvents.findIndex(e => e.id === eventId);
+                
+                if (existingIndex > -1) {
+                    this.myEvents.splice(existingIndex, 1);
+                    this.showToast('Removed from interested events', 'info');
+                } else {
+                    this.myEvents.push({
+                        ...event,
+                        status: 'interested',
+                        addedDate: new Date().toISOString()
+                    });
+                    this.showToast('Added to interested events!', 'success');
+                }
+
+                this.saveToStorage();
+                this.renderEvents();
+                this.updateStats();
+            }
+
+            renderMyEvents() {
+                const container = document.getElementById('myEventsList');
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let filtered = this.myEvents.filter(e => new Date(e.date) >= today);
+                
+                if (statusFilter) {
+                    filtered = filtered.filter(e => e.status === statusFilter);
+                }
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-bookmark-x"></i>
+                            <h4>No Interested Events</h4>
+                            <p>Mark events as interested from the Discover tab</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(event => `
+                    <div class="my-event-item status-${event.status}">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5>${event.name}</h5>
+                                <p class="mb-1"><i class="bi bi-geo-alt"></i> ${event.city}, ${event.country}</p>
+                                <p class="mb-1"><i class="bi bi-calendar"></i> ${this.formatDate(event.date)}</p>
+                                ${event.deadline ? `<p class="mb-1"><i class="bi bi-clock text-danger"></i> Deadline: ${this.formatDate(event.deadline)}</p>` : ''}
+                                <div class="mt-2">
+                                    ${event.benefits.hotel ? '<span class="badge bg-info me-1">Hotel</span>' : ''}
+                                    ${event.benefits.airfare ? '<span class="badge bg-success">Airfare</span>' : ''}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select status-select mb-2" data-event-id="${event.id}">
+                                    <option value="interested" ${event.status === 'interested' ? 'selected' : ''}>Interested</option>
+                                    <option value="applied" ${event.status === 'applied' ? 'selected' : ''}>Applied</option>
+                                    <option value="confirmed" ${event.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                    <option value="completed" ${event.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                    <option value="rejected" ${event.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                </select>
+                                <button class="btn btn-sm btn-primary w-100 mb-2" onclick="app.showEventDetails('${event.id}')">
+                                    <i class="bi bi-eye"></i> View Details
+                                </button>
+                                <button class="btn btn-sm btn-danger w-100" onclick="app.removeFromInterested('${event.id}')">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.querySelectorAll('.status-select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const eventId = e.target.dataset.eventId;
+                        const newStatus = e.target.value;
+                        this.updateEventStatus(eventId, newStatus);
+                    });
+                });
+            }
+
+            updateEventStatus(eventId, newStatus) {
+                const event = this.myEvents.find(e => e.id === eventId);
+                if (event) {
+                    event.status = newStatus;
+                    this.saveToStorage();
+                    this.updateStats();
+                    this.showToast(`Status updated to ${newStatus}`, 'success');
+                }
+            }
+
+            removeFromInterested(eventId) {
+                if (confirm('Remove this event from your list?')) {
+                    const index = this.myEvents.findIndex(e => e.id === eventId);
+                    if (index > -1) {
+                        this.myEvents.splice(index, 1);
+                        this.saveToStorage();
+                        this.renderMyEvents();
+                        this.updateStats();
+                        this.showToast('Event removed', 'info');
+                    }
+                }
+            }
+
+            updateStats() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const futureEvents = this.myEvents.filter(e => new Date(e.date) >= today);
+                
+                document.getElementById('interestedCount').textContent = 
+                    futureEvents.filter(e => e.status === 'interested').length;
+                document.getElementById('appliedCount').textContent = 
+                    futureEvents.filter(e => e.status === 'applied').length;
+                document.getElementById('confirmedCount').textContent = 
+                    futureEvents.filter(e => e.status === 'confirmed').length;
+                document.getElementById('completedCount').textContent = 
+                    futureEvents.filter(e => e.status === 'completed').length;
+            }
+
+            saveEvent() {
+                const id = document.getElementById('eventId').value;
+                const eventData = {
+                    id: id || this.generateId(),
+                    name: document.getElementById('eventName').value,
+                    country: document.getElementById('eventCountry').value,
+                    city: document.getElementById('eventCity').value,
+                    date: document.getElementById('eventDate').value,
+                    deadline: document.getElementById('eventDeadline').value,
+                    industry: document.getElementById('eventIndustry').value,
+                    benefits: {
+                        hotel: document.getElementById('benefitHotel').checked,
+                        airfare: document.getElementById('benefitAirfare').checked
+                    },
+                    organizer: document.getElementById('eventOrganizer').value,
+                    website: document.getElementById('eventWebsite').value,
+                    registrationUrl: document.getElementById('eventRegistrationUrl').value,
+                    email: document.getElementById('eventEmail').value,
+                    documents: document.getElementById('eventDocuments').value,
+                    description: document.getElementById('eventDescription').value,
+                    createdAt: id ? this.events.find(e => e.id === id).createdAt : new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    source: 'manual'
+                };
+
+                if (id) {
+                    const index = this.events.findIndex(e => e.id === id);
+                    this.events[index] = eventData;
+                    this.showToast('Event updated successfully!', 'success');
+                } else {
+                    this.events.push(eventData);
+                    this.showToast('Event added successfully!', 'success');
+                }
+
+                this.saveToStorage();
+                this.renderEvents();
+                this.updateRegionCounts();
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
+                modal.hide();
+                this.resetEventForm();
+            }
+
+            editEvent(eventId) {
+                const event = this.events.find(e => e.id === eventId);
+                if (!event) return;
+
+                document.getElementById('modalTitle').textContent = 'Edit Event';
+                document.getElementById('eventId').value = event.id;
+                document.getElementById('eventName').value = event.name;
+                document.getElementById('eventCountry').value = event.country;
+                document.getElementById('eventCity').value = event.city;
+                document.getElementById('eventDate').value = event.date;
+                document.getElementById('eventDeadline').value = event.deadline || '';
+                document.getElementById('eventIndustry').value = event.industry || '';
+                document.getElementById('benefitHotel').checked = event.benefits.hotel;
+                document.getElementById('benefitAirfare').checked = event.benefits.airfare;
+                document.getElementById('eventOrganizer').value = event.organizer || '';
+                document.getElementById('eventWebsite').value = event.website || '';
+                document.getElementById('eventRegistrationUrl').value = event.registrationUrl || '';
+                document.getElementById('eventEmail').value = event.email || '';
+                document.getElementById('eventDocuments').value = event.documents || '';
+                document.getElementById('eventDescription').value = event.description || '';
+
+                const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+                modal.show();
+            }
+
+            deleteEvent(eventId) {
+                this.events = this.events.filter(e => e.id !== eventId);
+                this.myEvents = this.myEvents.filter(e => e.id !== eventId);
+                this.saveToStorage();
+                this.renderEvents();
+                this.updateRegionCounts();
+                this.showToast('Event deleted', 'info');
+            }
+
+            resetEventForm() {
+                document.getElementById('modalTitle').textContent = 'Add New Event';
+                document.getElementById('eventForm').reset();
+                document.getElementById('eventId').value = '';
+            }
+
+            generateInsights() {
+                const container = document.getElementById('insightsContainer');
+                const recsContainer = document.getElementById('recommendationsContainer');
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const upcomingEvents = this.events.filter(e => new Date(e.date) >= today);
+                const totalEvents = upcomingEvents.length;
+                const premiumEvents = upcomingEvents.filter(e => e.benefits.hotel && e.benefits.airfare).length;
+                const indiaEvents = upcomingEvents.filter(e => e.country === 'India').length;
+
+                container.innerHTML = `
+                    <div class="col-md-4">
+                        <div class="insight-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h5><i class="bi bi-calendar-check"></i> Upcoming Events</h5>
+                            <div class="insight-value">${totalEvents}</div>
+                            <p class="mb-0">Future events available</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="insight-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h5><i class="bi bi-star-fill"></i> Premium Events</h5>
+                            <div class="insight-value">${premiumEvents}</div>
+                            <p class="mb-0">${totalEvents > 0 ? Math.round(premiumEvents/totalEvents*100) : 0}% offer both benefits</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="insight-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <h5><i class="bi bi-flag"></i> India Events</h5>
+                            <div class="insight-value">${indiaEvents}</div>
+                            <p class="mb-0">Upcoming in India</p>
+                        </div>
+                    </div>
+                `;
+
+                const recommendations = [
+                    {
+                        title: 'Premium Opportunities',
+                        description: `${premiumEvents} events offer both hotel and airfare benefits. These provide maximum value!`,
+                        category: 'High Priority'
+                    },
+                    {
+                        title: 'India Focus',
+                        description: `${indiaEvents} events in India require no international travel.`,
+                        category: 'Local Opportunity'
+                    }
+                ];
+
+                recsContainer.innerHTML = recommendations.map(rec => `
+                    <div class="col-md-6">
+                        <div class="recommendation-card">
+                            <h6><i class="bi bi-lightbulb-fill text-warning"></i> ${rec.title}</h6>
+                            <p class="mb-2">${rec.description}</p>
+                            <span class="badge bg-primary">${rec.category}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            exportJSON() {
+                const data = {
+                    events: this.events,
+                    myEvents: this.myEvents,
+                    exportedAt: new Date().toISOString(),
+                    version: '2.0.0'
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `hosted-buyer-events-${this.getTimestamp()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.showToast('Data exported as JSON', 'success');
+            }
+
+            importJSON(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        
+                        if (data.events) {
+                            this.events = data.events;
+                            this.removePastEvents();
+                        }
+                        if (data.myEvents) {
+                            this.myEvents = data.myEvents;
+                        }
+                        
+                        this.saveToStorage();
+                        this.renderEvents();
+                        this.updateStats();
+                        this.updateRegionCounts();
+                        this.showToast('Data imported successfully!', 'success');
+                    } catch (error) {
+                        this.showToast('Error importing JSON file', 'danger');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            clearPastEventsUI() {
+                if (confirm('Are you sure you want to clear all past events?')) {
+                    const removed = this.removePastEvents();
+                    this.renderEvents();
+                    this.updateRegionCounts();
+                    this.showToast(`Removed ${removed} past events`, 'info');
+                }
+            }
+
+            removePastEvents() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const beforeCount = this.events.length;
+                this.events = this.events.filter(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate >= today;
+                });
+                
+                const removed = beforeCount - this.events.length;
+                if (removed > 0) {
+                    this.saveToStorage();
+                }
+                return removed;
+            }
+
+            clearDatabase() {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
+                    this.events = [];
+                    this.myEvents = [];
+                    this.saveToStorage();
+                    this.renderEvents();
+                    this.renderMyEvents();
+                    this.updateStats();
+                    this.updateRegionCounts();
+                    this.showToast('Database cleared', 'info');
+                }
+            }
+
+            loadSampleEvents() {
+                const btn = document.getElementById('refreshOnlineBtn');
+                const icon = document.getElementById('refreshIcon');
+                const text = document.getElementById('refreshText');
+                
+                btn.disabled = true;
+                icon.classList.add('rotating');
+                text.textContent = 'Loading...';
+
+                setTimeout(() => {
+                    // Sample event database
+                    const sampleEvents = [
+                        {
+                            id: this.generateId(),
+                            name: 'IMEX America 2024',
+                            country: 'USA',
+                            city: 'Las Vegas',
+                            date: '2024-10-08',
+                            deadline: '2024-09-01',
+                            industry: 'MICE',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'IMEX Group',
+                            website: 'https://www.imexamerica.com',
+                            registrationUrl: 'https://www.imexamerica.com/hosted-buyer',
+                            email: 'info@imexamerica.com',
+                            documents: 'Business card, Company profile, Passport copy',
+                            description: 'Worldwide exhibition for incentive travel, meetings and events.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'WTM London 2024',
+                            country: 'UK',
+                            city: 'London',
+                            date: '2024-11-05',
+                            deadline: '2024-10-01',
+                            industry: 'Tourism',
+                            benefits: { hotel: false, airfare: true },
+                            organizer: 'Reed Travel Exhibitions',
+                            website: 'https://www.wtm.com/london',
+                            registrationUrl: 'https://www.wtm.com/london/en-gb/visitor/hosted-buyers.html',
+                            email: 'wtm@reedexpo.co.uk',
+                            documents: 'Valid passport, Business credentials',
+                            description: 'Leading global event for the travel industry.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'ITB Berlin 2025',
+                            country: 'Germany',
+                            city: 'Berlin',
+                            date: '2025-03-04',
+                            deadline: '2025-01-15',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'Messe Berlin',
+                            website: 'https://www.itb.com',
+                            registrationUrl: 'https://www.itb.com/en/Trade-Visitors/HostedBuyers/',
+                            email: 'itb@messe-berlin.de',
+                            documents: 'Passport, Business visa, Trade license',
+                            description: 'World\'s largest tourism trade fair.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'Arabian Travel Market 2025',
+                            country: 'UAE',
+                            city: 'Dubai',
+                            date: '2025-05-05',
+                            deadline: '2025-03-20',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'Reed Travel Exhibitions',
+                            website: 'https://www.arabiantravelmarket.com',
+                            registrationUrl: 'https://www.arabiantravelmarket.com/hosted-buyers',
+                            email: 'atm@reedexpo.ae',
+                            documents: 'Passport, UAE visa, Business profile',
+                            description: 'Leading global event for Middle East travel industry.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'ITB Asia 2024',
+                            country: 'Singapore',
+                            city: 'Singapore',
+                            date: '2024-10-23',
+                            deadline: '2024-09-30',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'Messe Berlin',
+                            website: 'https://www.itb-asia.com',
+                            registrationUrl: 'https://www.itb-asia.com/HostedBuyers/',
+                            email: 'info@itb-asia.com',
+                            documents: 'Passport, Business card, Company brochure',
+                            description: 'Asia\'s leading travel trade show.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'SATTE 2025',
+                            country: 'India',
+                            city: 'New Delhi',
+                            date: '2025-02-05',
+                            deadline: '2025-01-10',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: false },
+                            organizer: 'FICCI',
+                            website: 'https://www.satte.in',
+                            registrationUrl: 'https://www.satte.in/buyers',
+                            email: 'satte@ficci.com',
+                            documents: 'PAN card, Business registration, ID proof',
+                            description: 'South Asia\'s leading travel exhibition.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'India Travel Congress 2024',
+                            country: 'India',
+                            city: 'Mumbai',
+                            date: '2024-11-15',
+                            deadline: '2024-10-20',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'ICPB',
+                            website: 'https://www.indiatravelcongress.com',
+                            registrationUrl: 'https://www.indiatravelcongress.com/register',
+                            email: 'info@indiatravelcongress.com',
+                            documents: 'Business credentials, Company profile',
+                            description: 'Annual congregation of travel stakeholders.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'ITB China 2024',
+                            country: 'China',
+                            city: 'Shanghai',
+                            date: '2024-10-16',
+                            deadline: '2024-09-10',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'Messe Berlin',
+                            website: 'https://www.itb-china.com',
+                            registrationUrl: 'https://www.itb-china.com/en/HostedBuyers/',
+                            email: 'info@itb-china.com',
+                            documents: 'Passport, China visa, Business license',
+                            description: 'China\'s largest B2B travel trade show.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'FITUR Madrid 2025',
+                            country: 'Spain',
+                            city: 'Madrid',
+                            date: '2025-01-22',
+                            deadline: '2024-12-15',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'IFEMA',
+                            website: 'https://www.fitur.es',
+                            registrationUrl: 'https://www.fitur.es/en/hosted-buyers',
+                            email: 'fitur@ifema.es',
+                            documents: 'Passport, Schengen visa, Business credentials',
+                            description: 'International Tourism Trade Fair.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: this.generateId(),
+                            name: 'PATA Travel Mart 2025',
+                            country: 'Thailand',
+                            city: 'Bangkok',
+                            date: '2025-09-10',
+                            deadline: '2025-07-30',
+                            industry: 'Tourism',
+                            benefits: { hotel: true, airfare: true },
+                            organizer: 'PATA',
+                            website: 'https://www.patatravelmart.com',
+                            registrationUrl: 'https://www.patatravelmart.com/buyers',
+                            email: 'patatm@pata.org',
+                            documents: 'Passport, Business credentials',
+                            description: 'Asia Pacific\'s premier travel trade show.',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        }
+                    ];
+
+                    // Add to existing events (avoid duplicates)
+                    sampleEvents.forEach(newEvent => {
+                        const exists = this.events.some(e => 
+                            e.name === newEvent.name && e.date === newEvent.date
+                        );
+                        if (!exists) {
+                            this.events.push(newEvent);
+                        }
+                    });
+
+                    this.removePastEvents();
+                    this.saveToStorage();
+                    this.renderEvents();
+                    this.updateRegionCounts();
+
+                    document.getElementById('onlineEventCount').textContent = `${sampleEvents.length} events loaded`;
+                    this.showToast(`Loaded ${sampleEvents.length} events successfully!`, 'success');
+
+                    btn.disabled = false;
+                    icon.classList.remove('rotating');
+                    text.textContent = 'Load Events';
+                }, 1500);
+            }
+
+            generateId() {
+                return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            getTimestamp() {
+                const now = new Date();
+                return now.toISOString().replace(/[:.]/g, '-').substring(0, 19);
+            }
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+
+            formatDateTime(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            getStatusColor(status) {
+                const colors = {
+                    'interested': 'info',
+                    'applied': 'warning',
+                    'confirmed': 'success',
+                    'completed': 'secondary',
+                    'rejected': 'danger'
+                };
+                return colors[status] || 'secondary';
+            }
+
+            showToast(message, type = 'info') {
+                let container = document.querySelector('.toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'toast-container';
+                    document.body.appendChild(container);
+                }
+
+                const toast = document.createElement('div');
+                toast.className = `custom-toast alert alert-${type}`;
+                toast.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'x-circle' : 'info-circle'} me-2"></i>
+                        <div>${message}</div>
+                    </div>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 4000);
+            }
+        }
+
+        // Initialize App
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new HostedBuyerApp();
+        });
+    </script>
+</body>
+</html>

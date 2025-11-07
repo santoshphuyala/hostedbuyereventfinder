@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find and track hosted buyer events worldwide with complimentary benefits">
+    <meta name="theme-color" content="#0d6efd">
+    <title>Hosted Buyer Event Finder</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Connection Status Bar -->
+    <div id="connectionStatus" class="connection-status d-none">
+        <i class="bi bi-wifi-off"></i> <span id="connectionText">Offline - Showing cached events only</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-globe2"></i> HB Event Finder
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-tab="discover">
+                            <i class="bi bi-search"></i> Discover
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="my-events">
+                            <i class="bi bi-bookmark-star"></i> My Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="ai-insights">
+                            <i class="bi bi-lightbulb"></i> AI Insights
+                        </a>
+                    </li>
+<li class="nav-item">
+    <a class="nav-link" href="#" data-tab="saved-records">
+        <i class="bi bi-save"></i> Saved Records
+    </a>
+</li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="settings">
+                            <i class="bi bi-gear"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-0">
+        
+        <!-- Discover Tab -->
+        <div id="discover-tab" class="tab-content active">
+            <!-- Search & Filter Section -->
+            <div class="search-section p-3 bg-light">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>
+                            <i class="bi bi-binoculars"></i> Discover Events
+                        </h2>
+                        <button class="btn btn-success" id="refreshOnlineBtn">
+                            <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> 
+                            <span id="refreshText">Search Online</span>
+                        </button>
+                    </div>
+<button class="btn btn-success ms-2" id="saveAllBtn">
+    <i class="bi bi-download"></i> 
+    <span>Save All</span>
+</button>
+
+                    <!-- Last Updated Info -->
+                    <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+                        <span>
+                            <i class="bi bi-info-circle"></i> 
+                            Last updated: <strong id="lastUpdated">Never</strong>
+                        </span>
+                        <span class="badge bg-primary" id="onlineEventCount">0 events found online</span>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" 
+                                    placeholder="Search by event name, country, city, industry, or organizer...">
+                                <button class="btn btn-primary" id="searchBtn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regional Tabs -->
+                    <ul class="nav nav-pills mb-3 regional-tabs" id="regionalTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-region="all">
+                                <i class="bi bi-globe"></i> All Events
+                                <span class="badge bg-light text-dark ms-1" id="count-all">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="india">
+                                <i class="bi bi-flag"></i> India
+                                <span class="badge bg-light text-dark ms-1" id="count-india">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="china">
+                                <i class="bi bi-flag"></i> China
+                                <span class="badge bg-light text-dark ms-1" id="count-china">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="south-asia">
+                                <i class="bi bi-flag"></i> South Asia
+                                <span class="badge bg-light text-dark ms-1" id="count-south-asia">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-region="rest-world">
+                                <i class="bi bi-globe-americas"></i> Rest of World
+                                <span class="badge bg-light text-dark ms-1" id="count-rest-world">0</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Filters -->
+                    <div class="row g-2">
+                        <div class="col-md-3 col-6">
+                            <select id="benefitFilter" class="form-select">
+                                <option value="">All Benefits</option>
+                                <option value="both">Hotel + Airfare ⭐</option>
+                                <option value="hotel">Hotel Only</option>
+                                <option value="airfare">Airfare Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="dateFilter" class="form-select">
+                                <option value="all">All Future Events</option>
+                                <option value="1month">Next 1 Month</option>
+                                <option value="3months">Next 3 Months</option>
+                                <option value="6months">Next 6 Months</option>
+                                <option value="1year">Next 1 Year</option>
+                                <option value="2years">Next 2 Years</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="industryFilter" class="form-select">
+                                <option value="">All Industries</option>
+                                <option value="Tourism">Tourism</option>
+                                <option value="MICE">MICE</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Trade">Trade</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <select id="sortFilter" class="form-select">
+                                <option value="date-asc">Date (Nearest First)</option>
+                                <option value="date-desc">Date (Latest First)</option>
+                                <option value="priority">Priority (Premium First)</option>
+                                <option value="deadline">Deadline (Urgent First)</option>
+                                <option value="name">Name (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quick Filters -->
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-warning quick-filter" data-filter="premium">
+                            <i class="bi bi-star-fill"></i> Premium Events
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger quick-filter" data-filter="urgent">
+                            <i class="bi bi-exclamation-circle"></i> Urgent Deadlines
+                        </button>
+                        <button class="btn btn-sm btn-outline-success quick-filter" data-filter="upcoming">
+                            <i class="bi bi-calendar-event"></i> Next 3 Months
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="clearFilters">
+                            <i class="bi bi-x-circle"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>
+                        <span id="eventCount">0</span> Upcoming Events
+                        <small class="text-muted" id="regionLabel"></small>
+                    </h5>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                        <i class="bi bi-plus-circle"></i> Add Event
+                    </button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="text-center py-5 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Searching for events online...</p>
+                </div>
+
+                <div id="eventsGrid" class="row g-3">
+                    <!-- Events will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- My Events Tab -->
+        <div id="my-events-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-bookmark-star-fill"></i> My Interested Events
+                </h2>
+
+                <!-- Progress Tracker -->
+                <div class="row mb-4">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-info text-white">
+                            <div class="card-body">
+                                <h3 id="interestedCount">0</h3>
+                                <p class="mb-0">Interested</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-warning text-white">
+                            <div class="card-body">
+                                <h3 id="appliedCount">0</h3>
+                                <p class="mb-0">Applied</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-success text-white">
+                            <div class="card-body">
+                                <h3 id="confirmedCount">0</h3>
+                                <p class="mb-0">Confirmed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="card text-center bg-secondary text-white">
+                            <div class="card-body">
+                                <h3 id="completedCount">0</h3>
+                                <p class="mb-0">Completed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="mb-3">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="interested">Interested</option>
+                        <option value="applied">Applied</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <!-- My Events List -->
+                <div id="myEventsList">
+                    <!-- Interested events will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights Tab -->
+        <div id="ai-insights-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-lightbulb-fill"></i> AI-Powered Insights
+                </h2>
+
+                <!-- Insights Cards -->
+                <div class="row g-3" id="insightsContainer">
+                    <!-- Insights will be generated here -->
+                </div>
+
+                <!-- Recommendations -->
+                <div class="mt-4">
+                    <h4><i class="bi bi-stars"></i> Personalized Recommendations</h4>
+                    <div id="recommendationsContainer" class="row g-3 mt-3">
+                        <!-- Recommendations will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Trends -->
+                <div class="mt-4">
+                    <h4><i class="bi bi-graph-up"></i> Event Trends</h4>
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <canvas id="trendsChart" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- AI Recommendations -->
+<div class="mt-4">
+    <h4><i class="bi bi-robot"></i> AI-Powered Recommendations</h4>
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Based on your preferences and behavior
+    </div>
+    <div id="aiRecommendations"></div>
+</div>
+
+<!-- User Preferences -->
+<div class="mt-4">
+    <h4><i class="bi bi-sliders"></i> Your Preferences</h4>
+    <div class="card">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Passport Country</label>
+                    <select class="form-select" id="userPassportCountry">
+                        <option value="India">India</option>
+                        <option value="China">China</option>
+                        <option value="USA">USA</option>
+                        <option value="UK">UK</option>
+                        <option value="UAE">UAE</option>
+                        <option value="Singapore">Singapore</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Preferred Industries</label>
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userIndustries" value="Tourism" id="ind-tourism">
+                            <label class="form-check-label" for="ind-tourism">Tourism</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userIndustries" value="Trade" id="ind-trade">
+                            <label class="form-check-label" for="ind-trade">Trade</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userIndustries" value="MICE" id="ind-mice">
+                            <label class="form-check-label" for="ind-mice">MICE</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Preferred Regions</label>
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userRegions" value="India" id="reg-india">
+                            <label class="form-check-label" for="reg-india">India</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userRegions" value="UAE" id="reg-uae">
+                            <label class="form-check-label" for="reg-uae">UAE</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="userRegions" value="Singapore" id="reg-singapore">
+                            <label class="form-check-label" for="reg-singapore">Singapore</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary mt-3" id="savePreferencesBtn">
+                <i class="bi bi-save"></i> Save Preferences
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Saved Records Tab -->
+<div id="saved-records-tab" class="tab-content">
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-save-fill"></i> Saved Records</h2>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customEventModal">
+                    <i class="bi bi-plus-circle"></i> Add Custom Event
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h3 id="savedRecordsCount">0</h3>
+                        <p class="mb-0">Total Saved</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card text-center bg-danger text-white">
+                    <div class="card-body">
+                        <h3 id="urgentDeadlines">0</h3>
+                        <p class="mb-0">Urgent (≤7 days)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h3 id="upcomingEventsCount">0</h3>
+                        <p class="mb-0">Upcoming (30 days)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h3><i class="bi bi-clock-history"></i></h3>
+                        <p class="mb-0">Last Update</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Export Tools -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" id="searchSavedRecords" class="form-control" 
+                               placeholder="Search saved records...">
+                    </div>
+                    <div class="col-md-8 text-end">
+                        <button class="btn btn-success btn-sm" id="exportSavedJSON">
+                            <i class="bi bi-download"></i> Export JSON
+                        </button>
+                        <button class="btn btn-success btn-sm" id="exportSavedExcel">
+                            <i class="bi bi-file-earmark-excel"></i> Export Excel
+                        </button>
+                        <label class="btn btn-primary btn-sm">
+                            <i class="bi bi-upload"></i> Import JSON
+                            <input type="file" id="importSavedJSON" accept=".json" style="display: none;">
+                        </label>
+                        <label class="btn btn-primary btn-sm">
+                            <i class="bi bi-file-earmark-excel"></i> Import Excel
+                            <input type="file" id="importSavedExcel" accept=".xlsx,.xls" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Records Table -->
+        <div class="table-responsive">
+            <table class="table table-hover table-striped" id="savedRecordsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>SN</th>
+                        <th class="sortable-header" data-sort="name" style="cursor: pointer;">
+                            Event Name <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th class="sortable-header" data-sort="organizer" style="cursor: pointer;">
+                            Organizer <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th>Links</th>
+                        <th class="sortable-header" data-sort="date" style="cursor: pointer;">
+                            Event Date <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th class="sortable-header" data-sort="deadline" style="cursor: pointer;">
+                            Deadline & Reminder <i class="bi bi-arrow-down-up"></i>
+                        </th>
+                        <th>Benefits</th>
+                        <th>Saved On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be populated by saved.js -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="container py-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-gear-fill"></i> Settings & Data Management
+                </h2>
+
+                <!-- Online Search Settings -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-cloud-arrow-down"></i> Online Search Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                            <label class="form-check-label" for="autoRefresh">
+                                Auto-refresh events on app launch
+                            </label>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="searchMultipleSources" checked>
+                            <label class="form-check-label" for="searchMultipleSources">
+                                Search multiple sources (slower but more results)
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Search Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="searchTimeout" value="30" min="10" max="120">
+                        </div>
+                        <button class="btn btn-primary" id="testConnectionBtn">
+                            <i class="bi bi-wifi"></i> Test Internet Connection
+                        </button>
+                    </div>
+                </div>
+<!-- Push Notifications -->
+<div class="card mb-3">
+    <div class="card-header">
+        <h5><i class="bi bi-bell-fill"></i> Push Notifications</h5>
+    </div>
+    <div class="card-body">
+        <p>Enable browser notifications to receive deadline alerts and reminders.</p>
+        <button class="btn btn-primary" id="enableNotificationsBtn">
+            <i class="bi bi-bell"></i> Enable Notifications
+        </button>
+        <p class="mt-2 mb-0 small text-muted">
+            You'll receive alerts 7, 3, and 1 day before registration deadlines.
+        </p>
+    </div>
+</div>
+
+                <!-- Import/Export Section -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-arrow-down-up"></i> Import/Export Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <h6>Import Data</h6>
+                                <div class="mb-2">
+                                    <label class="form-label">Import from JSON</label>
+                                    <input type="file" class="form-control" id="importJSON" accept=".json">
+                                </div>
+                                <div>
+                                    <label class="form-label">Import from Excel</label>
+                                    <input type="file" class="form-control" id="importExcel" accept=".xlsx,.xls">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Export Data</h6>
+                                <button class="btn btn-success mb-2 w-100" id="exportJSON">
+                                    <i class="bi bi-download"></i> Export as JSON
+                                </button>
+                                <button class="btn btn-success w-100" id="exportExcel">
+                                    <i class="bi bi-file-earmark-excel"></i> Export as Excel
+                                </button>
+                                <small class="text-muted d-block mt-2">
+                                    Exports include timestamp and all event data
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Management -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-database"></i> Database Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Total Events in Database: <strong id="totalEvents">0</strong></label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Upcoming Events: <strong id="upcomingEvents">0</strong></label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Past Events: <strong id="pastEvents">0</strong></label>
+                        </div>
+                        <button class="btn btn-danger me-2" id="clearPastEvents">
+                            <i class="bi bi-calendar-x"></i> Clear Past Events
+                        </button>
+                        <button class="btn btn-warning me-2" id="clearDatabase">
+                            <i class="bi bi-trash"></i> Clear All Data
+                        </button>
+                        <button class="btn btn-info" id="loadSampleData">
+                            <i class="bi bi-download"></i> Load Sample Events
+                        </button>
+                    </div>
+                </div>
+
+                <!-- About -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-info-circle"></i> About</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Hosted Buyer Event Finder</strong></p>
+                        <p>Version 2.0.0</p>
+                        <p class="mb-1">Designed & Developed by:</p>
+                        <p class="mb-0"><strong>Santosh Phuyal</strong></p>
+                        <p class="mb-3">
+                            <i class="bi bi-envelope"></i> 
+                            <a href="mailto:hisantoshphuyal@gmail.com">hisantoshphuyal@gmail.com</a>
+                        </p>
+                        <p class="text-muted small">
+                            This PWA helps business professionals discover and track hosted buyer events worldwide, 
+                            with real-time online search capabilities and intelligent filtering.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add/Edit Event Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> <span id="modalTitle">Add New Event</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        <input type="hidden" id="eventId">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Event Name *</label>
+                                <input type="text" class="form-control" id="eventName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country *</label>
+                                <input type="text" class="form-control" id="eventCountry" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" id="eventCity" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Event Date *</label>
+                                <input type="date" class="form-control" id="eventDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Application Deadline</label>
+                                <input type="date" class="form-control" id="eventDeadline">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Industry</label>
+                                <input type="text" class="form-control" id="eventIndustry" placeholder="e.g., Tourism, Tech">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Benefits *</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="benefitHotel">
+                                    <label class="form-check-label" for="benefitHotel">
+                                        Complimentary Hotel
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="benefitAirfare">
+                                    <label class="form-check-label" for="benefitAirfare">
+                                        Complimentary Airfare
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Organizer Name</label>
+                                <input type="text" class="form-control" id="eventOrganizer" placeholder="Event organizer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Organizer Website</label>
+                                <input type="url" class="form-control" id="eventOrganizerUrl" placeholder="https://">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Event Website</label>
+                                <input type="url" class="form-control" id="eventWebsite" placeholder="https://">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Registration Link</label>
+                                <input type="url" class="form-control" id="eventRegistrationUrl" placeholder="https://">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Email</label>
+                                <input type="email" class="form-control" id="eventEmail">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Phone</label>
+                                <input type="tel" class="form-control" id="eventPhone">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Documents Required</label>
+                                <textarea class="form-control" id="eventDocuments" rows="2" 
+                                    placeholder="e.g., Passport copy, Business card, Company profile"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveEventBtn">
+                        <i class="bi bi-save"></i> Save Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="eventDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailEventName"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="eventDetailsContent">
+                    <!-- Details will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning" id="editEventBtn">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteEventBtn">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Custom Event Modal -->
+<div class="modal fade" id="customEventModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Add Custom Event
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Add events you've discovered to improve our search database!
+                </div>
+                <form id="customEventForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Event Name *</label>
+                            <input type="text" class="form-control" id="customEventName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Organizer *</label>
+                            <input type="text" class="form-control" id="customEventOrganizer" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Country *</label>
+                            <input type="text" class="form-control" id="customEventCountry" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City *</label>
+                            <input type="text" class="form-control" id="customEventCity" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Event Date *</label>
+                            <input type="date" class="form-control" id="customEventDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Registration Deadline</label>
+                            <input type="date" class="form-control" id="customEventDeadline">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Industry</label>
+                            <input type="text" class="form-control" id="customEventIndustry">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="customEventEmail">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Event Website</label>
+                            <input type="url" class="form-control" id="customEventWebsite" placeholder="https://">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Registration URL</label>
+                            <input type="url" class="form-control" id="customEventRegUrl" placeholder="https://">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Benefits</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="customBenefitHotel">
+                                <label class="form-check-label" for="customBenefitHotel">
+                                    Complimentary Hotel
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="customBenefitAirfare">
+                                <label class="form-check-label" for="customBenefitAirfare">
+                                    Complimentary Airfare
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Documents Required</label>
+                            <textarea class="form-control" id="customEventDocuments" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="customEventDescription" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitCustomEventBtn">
+                    <i class="bi bi-check-circle"></i> Submit Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Saved Record Details Modal -->
+<div class="modal fade" id="savedRecordDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Event Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="savedRecordDetailsContent">
+                <!-- Details loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Checklist Modal -->
+<div class="modal fade" id="documentChecklistModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-clipboard-check"></i> Document Checklist: 
+                    <span id="checklistEventName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="documentChecklistContent">
+                <!-- Content loaded by features.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visa Requirements Modal -->
+<div class="modal fade" id="visaRequirementsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-passport"></i> Visa Requirements: 
+                    <span id="visaEventName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="visaRequirementsContent">
+                <!-- Content loaded by features.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Calculator Modal -->
+<div class="modal fade" id="budgetCalculatorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-calculator"></i> Budget Calculator: 
+                    <span id="budgetEventName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="budgetCalculatorContent">
+                <!-- Content loaded by features.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ROI Tracker Modal -->
+<div class="modal fade" id="roiTrackerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-graph-up"></i> ROI Tracker: 
+                    <span id="roiEventName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="roiTrackerContent">
+                <!-- Content loaded by features.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Portfolio Modal -->
+<div class="modal fade" id="eventPortfolioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-images"></i> Event Portfolio: 
+                    <span id="portfolioEventName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="eventPortfolioContent">
+                <!-- Content loaded by features.js -->
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">© 2024 Hosted Buyer Event Finder | Designed by <strong>Santosh Phuyal</strong></p>
+        <p class="mb-0 small">
+            <a href="mailto:hisantoshphuyal@gmail.com" class="text-white">hisantoshphuyal@gmail.com</a>
+        </p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js for trends -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="event-search.js"></script>
+    <script src="app.js"></script>
+<!-- Saved Records JS -->
+<script src="saved.js"></script>
+    <script src="service-worker-register.js"></script>
+<!-- New Features Scripts -->
+<script src="features.js"></script>
+<script src="notifications.js"></script>
+</body>
+</html>
